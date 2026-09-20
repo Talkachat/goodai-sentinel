@@ -1,0 +1,13 @@
+=== GitHub repo "About" — انسخ ده في إعدادات المستودع ===
+
+Description (وصف قصير، أقل من 350 حرف):
+🛡️ Defensive AI module — protects computers, mobile, networks & servers against
+cyberattacks, malicious AI agents, and malware. Deny-by-default agent guardrail +
+host monitoring + tamper-evident audit + red-team CI. Bilingual (EN/AR). MIT.
+
+Website (اختياري): اتركه فاضي أو حط رابط docs
+
+Topics (اكتبهم في خانة Topics، واحد ورا التاني):
+security  defensive-security  ai-safety  ai-agents  llm-security  guardrails
+endpoint-security  cybersecurity  threat-detection  red-team  python  kotlin
+swift  android  ios  arabic  agentic-ai  zero-trust

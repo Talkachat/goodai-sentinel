@@ -1,0 +1,55 @@
+# GoodAI Sentinel — سياسة حاجز وكلاء الذكاء الاصطناعي (نسخة بتعليقات عربية، مطابقة وظيفياً للأصل).
+# المنع افتراضياً. كل ما لم يُمنح للوكيل صراحةً مرفوض.
+# عدّل بحرية؛ المحرّك يعيد التحميل عند إعادة التشغيل. أبقِ هذا الملف نفسه في deny_targets.
+
+kill_switch: false          # اجعلها true لتجميد كل أفعال الوكلاء فوراً
+
+# أنماط لا يُسمح بها أبداً لأي وكيل مهما كانت صلاحياته.
+# تستهدف أنماط الفشل الكلاسيكية: الحفاظ على الذات، التهرّب من الدفاع،
+# التدمير، التسريب، وتصعيد الصلاحيات.
+forbidden_patterns:
+  disable_defense:    "(stop|kill|disable|uninstall|mask)\\s+.*(sentinel|guardrail|antivirus|firewall|auditd|ufw|iptables|selinux|apparmor)"   # تعطيل الدفاع
+  self_modify:        "(edit|write|modify|patch|replace).*(agent_guardrails|guardrail\\.py|sentinel/|own\\s+(code|weights|prompt))"           # التعديل الذاتي
+  destroy_data:       "rm\\s+-rf\\s+/|mkfs\\.|dd\\s+if=.*of=/dev|shred\\s|format\\s+[a-z]:|drop\\s+(database|table)\\s+(?!temp)"            # تدمير البيانات
+  exfiltrate:         "(curl|wget|scp|rsync|nc)\\s+.*(\\.env|id_rsa|shadow|credentials|token|\\.pem)"                                         # تسريب الأسرار
+  download_exec:      "(curl|wget)[^|]*\\|\\s*(ba)?sh"                                                                                        # تنزيل وتنفيذ
+  reverse_shell:      "nc\\s+.*-e\\s|/dev/tcp/|mkfifo"                                                                                        # صدفة عكسية
+  privesc:            "sudo\\s+su|pkexec|chmod\\s+[ug]\\+s"                                                                                   # تصعيد صلاحيات
+  credential_access:  "/etc/shadow|/etc/sudoers|authorized_keys|\\.aws/credentials|\\.kube/config"                                           # الوصول للاعتمادات
+  spawn_unbounded:    "(spawn|fork|replicate|copy).*(itself|self|agents?\\s+x?\\d{2,})"                                                       # تكاثر ذاتي غير محدود
+  control_hardware:   "(flash|overwrite|write).*(firmware|bios|uefi|bootloader|eeprom)"                                                       # كتابة البرامج الثابتة
+  disable_logging:    "(rm|truncate|clear|disable).*(audit|syslog|journal|/var/log)"                                                          # تدمير السجلات
+
+# تُطبَّق على كل وكيل ما لم تُستبدل في `agents`.
+defaults:
+  capabilities: ["read:*", "search:*", "summarize:*"]     # الصلاحيات المسموحة
+  deny_targets:                                            # أهداف ممنوعة دائماً
+    - "/etc/*"
+    - "/boot/*"
+    - "/root/*"
+    - "*/.ssh/*"
+    - "*/.env"
+    - "*/policy/agent_guardrails.yaml"
+    - "*/sentinel/*"
+  rate_limit: { max: 60, window_s: 60 }                    # حد المعدّل: 60 فعلاً في الدقيقة
+  budget: 100.0                                            # الميزانية (بأي وحدة يبلّغ عنها المستدعي)
+  require_approval: ["delete:*", "deploy:*", "send:*", "pay:*", "shell:*"]   # تحتاج موافقة بشرية
+
+# تخصيصات لكل وكيل. المفاتيح أنماط على agent_id.
+agents:
+  "coder-*":                                               # وكلاء البرمجة
+    capabilities: ["read:*", "write:file", "run:test", "run:lint", "shell:*"]
+    allow_targets: ["/workspace/*", "/tmp/*"]
+    require_approval: ["shell:*", "delete:*", "write:*.yaml", "write:*.yml"]
+    rate_limit: { max: 120, window_s: 60 }
+    budget: 500.0
+
+  "ops-*":                                                 # وكلاء التشغيل
+    capabilities: ["read:*", "restart:service", "scale:*", "deploy:*"]
+    require_approval: ["deploy:prod*", "scale:*"]
+    budget: 50.0
+
+  "untrusted-*":                                           # وكلاء غير موثوقين
+    capabilities: ["read:public/*"]
+    rate_limit: { max: 10, window_s: 60 }
+    budget: 5.0

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.goodai.sentinel</string>
+  <key>ProgramArguments</key><array>
+    <string>/usr/bin/python3</string><string>-m</string><string>sentinel</string>
+    <string>--live</string><string>--audit</string><string>/var/log/sentinel/audit.jsonl</string>
+  </array>
+  <key>WorkingDirectory</key><string>/opt/goodai</string>
+  <key>RunAtLoad</key><true/><key>KeepAlive</key><true/>
+  <key>StandardErrorPath</key><string>/var/log/sentinel/stderr.log</string>
+</dict></plist>
+<!-- Before first run, add to /etc/pf.conf:   table <sentinel> persist
+     block out quick to <sentinel>        then: sudo pfctl -f /etc/pf.conf -e -->

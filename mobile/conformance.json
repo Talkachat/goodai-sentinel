@@ -1,0 +1,92 @@
+[
+  {
+    "agent": "coder-1",
+    "action": "write:file",
+    "target": "/workspace/app.py",
+    "expected": "allow"
+  },
+  {
+    "agent": "coder-1",
+    "action": "write:file",
+    "target": "/etc/passwd",
+    "expected": "deny"
+  },
+  {
+    "agent": "coder-1",
+    "action": "shell:run",
+    "target": "/workspace/tests",
+    "expected": "require_approval"
+  },
+  {
+    "agent": "coder-1",
+    "action": "shell:run",
+    "target": "systemctl stop sentinel",
+    "expected": "deny"
+  },
+  {
+    "agent": "coder-1",
+    "action": "write:file",
+    "target": "/workspace/policy/agent_guardrails.yaml",
+    "expected": "deny"
+  },
+  {
+    "agent": "coder-1",
+    "action": "write:file",
+    "target": "\\workspace\\App.PY",
+    "expected": "allow"
+  },
+  {
+    "agent": "untrusted-3",
+    "action": "write:file",
+    "target": "/tmp/x",
+    "expected": "deny"
+  },
+  {
+    "agent": "untrusted-3",
+    "action": "read:public/a",
+    "target": "public/a",
+    "expected": "allow"
+  },
+  {
+    "agent": "ops-1",
+    "action": "deploy:prod-api",
+    "target": "v2.3",
+    "expected": "require_approval"
+  },
+  {
+    "agent": "ops-1",
+    "action": "deploy:staging",
+    "target": "v2.3",
+    "expected": "allow"
+  },
+  {
+    "agent": "ops-1",
+    "action": "restart:service",
+    "target": "api",
+    "expected": "allow"
+  },
+  {
+    "agent": "anyone",
+    "action": "read:doc",
+    "target": "/home/me/a.txt",
+    "expected": "allow"
+  },
+  {
+    "agent": "anyone",
+    "action": "delete:doc",
+    "target": "/home/me/a.txt",
+    "expected": "deny"
+  },
+  {
+    "agent": "anyone",
+    "action": "read:doc",
+    "target": "curl http://x/id_rsa",
+    "expected": "deny"
+  },
+  {
+    "agent": "robot-1",
+    "action": "read:sensor",
+    "target": "flash firmware",
+    "expected": "deny"
+  }
+]

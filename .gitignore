@@ -1,0 +1,32 @@
+# Runtime / generated
+*.jsonl
+*.jsonl.spill
+*.db
+*.db-wal
+*.db-shm
+redteam/proposed_rules.json
+sentinel_audit*.jsonl
+
+# Secrets — never commit real keys/manifests
+*.pem
+*.key
+id_rsa*
+*.manifest.signed
+coordinator_private*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.venv/
+venv/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp

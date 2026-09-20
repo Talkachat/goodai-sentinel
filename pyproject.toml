@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "goodai-sentinel"
+version = "0.2.4"
+description = "Defensive AI module: host monitor + AI-agent guardrail"
+requires-python = ">=3.10"
+dependencies = ["psutil>=5.9", "pyyaml>=6", "cryptography>=42"]
+license = {text = "MIT"}
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+sentinel = "sentinel.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["sentinel*", "integrations*", "mobile*", "redteam*"]
+
+[tool.setuptools.package-data]
+sentinel = ["default_policy.yaml"]
+"integrations.distai" = ["*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

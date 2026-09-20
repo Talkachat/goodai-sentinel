@@ -1,0 +1,39 @@
+# Sentinel policy for the DistAI network. Deny by default.
+kill_switch: false
+
+forbidden_patterns:
+  disable_defense:   "(stop|kill|disable|uninstall|mask)\\s+.*(sentinel|guardrail|shield|firewall|auditd)"
+  self_modify:       "(edit|write|modify|patch|replace).*(policy_distai|node_shield|sentinel/|als_node)"
+  exfiltrate:        "(curl|wget|scp|rsync|nc)\\s+.*(\\.env|id_rsa|api_key|credentials|token|\\.pem|config\\.json)"
+  download_exec:     "(curl|wget)[^|]*\\|\\s*(ba)?sh"
+  reverse_shell:     "nc\\s+.*-e\\s|/dev/tcp/|mkfifo"
+  credential_access: "/etc/shadow|authorized_keys|\\.aws/credentials|\\.distai/config\\.json"
+  model_tamper:      "(write|modify|replace|download).*(\\.gguf|models/)(?!.*manifest)"
+  spawn_unbounded:   "(spawn|fork|replicate).*(itself|self|nodes?\\s+x?\\d{2,})"
+
+defaults:
+  capabilities: []                     # nothing unless explicitly listed
+  rate_limit: { max: 30, window_s: 60 }
+  budget: 1.0
+
+agents:
+  # A volunteer node. It may only run inference for the coordinator and talk to the coordinator.
+  "distai-node-*":
+    capabilities: ["infer:chat", "poll:jobs", "upload:result", "report:finding", "verify:model"]
+    allow_targets: ["coordinator/*", "model/*"]
+    deny_targets:  ["*/.distai/*", "*/als_node*", "*/node_shield*", "*/policy_distai*"]
+    rate_limit: { max: 600, window_s: 60 }        # jobs + polls per minute
+    budget: 100000.0                               # tokens per hour, refilled by coordinator
+
+  # MoA synthesizer role: same as node but may read peer answers
+  "distai-moa-*":
+    capabilities: ["infer:chat", "infer:synthesize", "poll:jobs", "upload:result", "report:finding", "verify:model"]
+    allow_targets: ["coordinator/*", "model/*", "peer-answers/*"]
+    rate_limit: { max: 600, window_s: 60 }
+    budget: 200000.0
+
+  # The coordinator acting on nodes (quarantine, blocklist push) — needs a human for destructive fleet actions
+  "distai-coordinator":
+    capabilities: ["quarantine:node", "release:node", "push:blocklist", "push:policy", "revoke:node"]
+    require_approval: ["revoke:node", "push:policy"]
+    rate_limit: { max: 120, window_s: 60 }

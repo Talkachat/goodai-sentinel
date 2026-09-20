@@ -1,0 +1,13 @@
+[Unit]
+Description=GoodAI Sentinel defensive monitor
+After=network.target
+[Service]
+ExecStart=/usr/bin/python3 -m sentinel --live --audit /var/log/sentinel/audit.jsonl
+WorkingDirectory=/opt/goodai
+Restart=always
+User=root
+ProtectSystem=strict
+ReadWritePaths=/var/log/sentinel
+CapabilityBoundingSet=CAP_KILL CAP_NET_ADMIN CAP_SYS_PTRACE CAP_DAC_READ_SEARCH
+[Install]
+WantedBy=multi-user.target

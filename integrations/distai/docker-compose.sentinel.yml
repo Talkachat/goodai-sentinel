@@ -1,0 +1,29 @@
+# Layer 3 — OPTIONAL host protection for DistAI contributors.
+# Not part of the node. Enable only if you want it:
+#     docker compose -f docker-compose.yml -f docker-compose.sentinel.yml up -d
+#
+# What it sees: process names/command lines, network destinations, hashes of files in
+# the paths you list below. What it never sees or sends: file contents, keystrokes, prompts.
+# What it sends to the coordinator: findings only (rule name, severity, destination).
+# Starts in dry-run: it reports, it does not kill/block until you set SENTINEL_LIVE=1.
+services:
+  sentinel:
+    image: ghcr.io/goodai/sentinel:latest
+    pid: "host"                 # needed to see processes
+    network_mode: "host"        # needed to see connections (and to block, if LIVE)
+    cap_add: [SYS_PTRACE, KILL, NET_ADMIN]
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: [/tmp]
+    volumes:
+      - /etc:/host/etc:ro
+      - ${HOME}/.ssh:/host/ssh:ro
+      - sentinel-audit:/var/log/sentinel
+    environment:
+      - SENTINEL_LIVE=${SENTINEL_LIVE:-0}
+      - SENTINEL_REPORT_TO=${COORDINATOR}
+      - SENTINEL_NODE_ID=${NODE_ID}
+    command: ["python3", "-m", "sentinel", "--watch", "/host/etc", "/host/ssh", "--audit", "/var/log/sentinel/audit.jsonl"]
+    restart: unless-stopped
+volumes:
+  sentinel-audit:

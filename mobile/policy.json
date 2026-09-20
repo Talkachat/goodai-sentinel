@@ -1,0 +1,217 @@
+{
+  "version": 1,
+  "killSwitch": false,
+  "forbidden": [
+    {
+      "name": "disable_defense",
+      "regex": "(stop|kill|disable|uninstall|mask)\\s+.*(sentinel|guardrail|antivirus|firewall|auditd|ufw|iptables|selinux|apparmor)"
+    },
+    {
+      "name": "self_modify",
+      "regex": "(edit|write|modify|patch|replace).*(agent_guardrails|guardrail\\.py|sentinel/|own\\s+(code|weights|prompt))"
+    },
+    {
+      "name": "destroy_data",
+      "regex": "rm\\s+-rf\\s+/|mkfs\\.|dd\\s+if=.*of=/dev|shred\\s|format\\s+[a-z]:|drop\\s+(database|table)\\s+(?!temp)"
+    },
+    {
+      "name": "exfiltrate",
+      "regex": "(curl|wget|scp|rsync|nc)\\s+.*(\\.env|id_rsa|shadow|credentials|token|\\.pem)"
+    },
+    {
+      "name": "download_exec",
+      "regex": "(curl|wget)[^|]*\\|\\s*(ba)?sh"
+    },
+    {
+      "name": "reverse_shell",
+      "regex": "nc\\s+.*-e\\s|/dev/tcp/|mkfifo"
+    },
+    {
+      "name": "privesc",
+      "regex": "sudo\\s+su|pkexec|chmod\\s+[ug]\\+s"
+    },
+    {
+      "name": "credential_access",
+      "regex": "/etc/shadow|/etc/sudoers|authorized_keys|\\.aws/credentials|\\.kube/config"
+    },
+    {
+      "name": "spawn_unbounded",
+      "regex": "(spawn|fork|replicate|copy).*(itself|self|agents?\\s+x?\\d{2,})"
+    },
+    {
+      "name": "control_hardware",
+      "regex": "(flash|overwrite|write).*(firmware|bios|uefi|bootloader|eeprom)"
+    },
+    {
+      "name": "disable_logging",
+      "regex": "(rm|truncate|clear|disable).*(audit|syslog|journal|/var/log)"
+    },
+    {
+      "name": "cloud_metadata",
+      "regex": "169\\.254\\.169\\.254|metadata\\.google\\.internal|/latest/meta-data"
+    },
+    {
+      "name": "env_dump",
+      "regex": "/proc/self/environ|\\bprintenv\\b|os\\.environ|Get-ChildItem\\s+env:|\\$ENV:|\\benv\\b\\s*(\\||>)"
+    },
+    {
+      "name": "ai_key_exfil",
+      "regex": "(curl|wget|scp|rsync|nc|Invoke-WebRequest|irm|iwr)\\s+.*(sk-ant-|sk-[A-Za-z0-9]{32}|AKIA[0-9A-Z]{16}|ghp_|xox[baprs]-|api[_-]?key)"
+    },
+    {
+      "name": "disable_updates",
+      "regex": "(stop|disable|mask|config).*(wuauserv|unattended-upgrades|softwareupdate|Set-MpPreference)"
+    },
+    {
+      "name": "register_device",
+      "regex": "(register|enroll|join).*(device|tenant).*(actor|attacker|our|my)|deviceRegistration|/devicemanagement/"
+    },
+    {
+      "name": "webshell",
+      "regex": "(mu-plugins|wp-content/uploads).*\\.(php|phtml)|\\.(woff2?|ttf|css)\\.php"
+    },
+    {
+      "name": "ws_destroy",
+      "regex": "r[\\s\\u00a0\"'`]*m[\\s\\u00a0]*-[\\s\\u00a0]*rf|of[\\s\\u00a0]*=[\\s\\u00a0]*/dev/"
+    },
+    {
+      "name": "ws_disable_defense",
+      "regex": "s[\\s\\u00a0\"'`]*t[\\s\\u00a0\"'`]*o[\\s\\u00a0\"'`]*p[\\s\\u00a0]+\\w*def"
+    },
+    {
+      "name": "ws_ransomware",
+      "regex": "d[\\s\\u00a0\"'`]*e[\\s\\u00a0\"'`]*l[\\s\\u00a0\"'`]*e[\\s\\u00a0\"'`]*t[\\s\\u00a0\"'`]*e[\\s\\u00a0]+shadow"
+    }
+  ],
+  "defaults": {
+    "capabilities": [
+      "^read:.*$",
+      "^search:.*$",
+      "^summarize:.*$"
+    ],
+    "denyTargets": [
+      "^/etc/.*$",
+      "^/boot/.*$",
+      "^/root/.*$",
+      "^.*/\\.ssh/.*$",
+      "^.*/\\.env$",
+      "^.*/policy/agent_guardrails\\.yaml$",
+      "^.*/sentinel/.*$"
+    ],
+    "allowTargets": [],
+    "requireApproval": [
+      "^delete:.*$",
+      "^deploy:.*$",
+      "^send:.*$",
+      "^pay:.*$",
+      "^shell:.*$",
+      "^spawn:.*$",
+      "^register:.*$"
+    ],
+    "rateLimit": {
+      "max": 60,
+      "window_s": 60
+    },
+    "budget": 100.0
+  },
+  "agents": [
+    {
+      "match": "^coder\\-.*$",
+      "config": {
+        "capabilities": [
+          "^read:.*$",
+          "^write:file$",
+          "^run:test$",
+          "^run:lint$",
+          "^shell:.*$"
+        ],
+        "denyTargets": [
+          "^/etc/.*$",
+          "^/boot/.*$",
+          "^/root/.*$",
+          "^.*/\\.ssh/.*$",
+          "^.*/\\.env$",
+          "^.*/policy/agent_guardrails\\.yaml$",
+          "^.*/sentinel/.*$"
+        ],
+        "allowTargets": [
+          "^/workspace/.*$",
+          "^/tmp/.*$"
+        ],
+        "requireApproval": [
+          "^shell:.*$",
+          "^delete:.*$",
+          "^write:.*\\.yaml$",
+          "^write:.*\\.yml$"
+        ],
+        "rateLimit": {
+          "max": 120,
+          "window_s": 60
+        },
+        "budget": 500.0
+      }
+    },
+    {
+      "match": "^ops\\-.*$",
+      "config": {
+        "capabilities": [
+          "^read:.*$",
+          "^restart:service$",
+          "^scale:.*$",
+          "^deploy:.*$"
+        ],
+        "denyTargets": [
+          "^/etc/.*$",
+          "^/boot/.*$",
+          "^/root/.*$",
+          "^.*/\\.ssh/.*$",
+          "^.*/\\.env$",
+          "^.*/policy/agent_guardrails\\.yaml$",
+          "^.*/sentinel/.*$"
+        ],
+        "allowTargets": [],
+        "requireApproval": [
+          "^deploy:prod.*$",
+          "^scale:.*$"
+        ],
+        "rateLimit": {
+          "max": 60,
+          "window_s": 60
+        },
+        "budget": 50.0
+      }
+    },
+    {
+      "match": "^untrusted\\-.*$",
+      "config": {
+        "capabilities": [
+          "^read:public/.*$"
+        ],
+        "denyTargets": [
+          "^/etc/.*$",
+          "^/boot/.*$",
+          "^/root/.*$",
+          "^.*/\\.ssh/.*$",
+          "^.*/\\.env$",
+          "^.*/policy/agent_guardrails\\.yaml$",
+          "^.*/sentinel/.*$"
+        ],
+        "allowTargets": [],
+        "requireApproval": [
+          "^delete:.*$",
+          "^deploy:.*$",
+          "^send:.*$",
+          "^pay:.*$",
+          "^shell:.*$",
+          "^spawn:.*$",
+          "^register:.*$"
+        ],
+        "rateLimit": {
+          "max": 10,
+          "window_s": 60
+        },
+        "budget": 5.0
+      }
+    }
+  ]
+}

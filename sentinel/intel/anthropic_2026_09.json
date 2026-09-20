@@ -1,0 +1,30 @@
+{
+  "source": "Anthropic, Detecting and countering misuse of AI, September 2026",
+  "url": "https://www.anthropic.com/threat-intelligence-report-september-2026",
+  "domains": [
+    "ms365-live.com","teams.ms365-live.com","m365-owa.com","owa-ms365.com","ms365-device.com","mslivetest.duckdns.org",
+    "my-invite.org","chamber-ua.org","chathamhouse.eu","ukrinform-share.net","statistic-ms.live","static-ms.live","ad-g.org",
+    "docs-viewer.org","wa-connect.eu","mygreatmarket.org","mygreatmarket.com","cdncounter.net","static.cdncounter.net",
+    "stuseamandesilt.org","api.stuseamandesilt.org","cdn.stuseamandesilt.org","update.stuseamandesilt.org","itechx.tel",
+    "pdfviewer2024.b-cdn.net","meridian-protocol.org","meridiangroup-corp.com","projectnightcrawler.dev","metricwave.org",
+    "mgsend.org","wa-meeting.com","russianearabroad.com","russianearabroad.org","russianearabroad.net","embassy-protocol.int",
+    "updatebeacon.duckdns.org","soraki.cc","soraki.work","policenationale.cc","autoshop.policenationale.cc","emailsecure.email",
+    "mozilla.ws","signin-1psswoord.com","on-pssword.com","ari-chain.com","arichain.network","bitmart-mystery.com",
+    "defi-claim.xyz","service-infos.info","megas4.com","s3.ap-tokyo.megas4.com",
+    "awstore.cloud","kiro.cheap","sys-tools.cfd","aws-us-east-3.com","holdboost.store","deltaclient.xyz",
+    "frntrs-analytics.dedyn.io","prod-artfkt.com","fafwatch.xyz","malaysiapulse.com","bbsteknoloji.com"
+  ],
+  "ips": [
+    "104.145.210.184","31.57.243.154","104.194.151.133","104.194.159.55","144.172.114.192","213.145.86.112","2.26.53.194",
+    "148.135.195.111","185.198.234.26","185.198.234.101","149.54.42.106","104.194.149.228","38.146.28.132","38.146.28.75",
+    "162.128.129.106","195.178.110.131","45.148.10.242","92.118.39.3","185.65.134.246","185.65.134.199","193.32.249.161",
+    "193.32.249.164","193.32.249.170","104.36.50.54","104.193.135.207","91.171.138.169","176.177.12.62",
+    "141.133.125.208","167.250.111.136","178.16.54.141","37.27.103.22","194.163.183.216","202.66.167.230","146.103.101.253",
+    "146.103.97.169","139.59.2.243","158.173.46.118","146.70.116.131","149.22.83.6","138.199.60.29","138.199.6.208",
+    "103.216.220.19","103.124.165.199","103.141.60.144","34.156.199.132","34.156.95.176","136.144.242.56","163.172.157.53",
+    "23.88.118.216","91.99.117.166","157.180.93.7","167.235.157.100","46.62.214.3","46.225.91.180"
+  ],
+  "file_names": ["msedgeupdate_v3.exe","msedgeupdate.exe","wuengine.exe","diaghost.exe","fix_network.apk"],
+  "sha256": ["be99857449d2856dd5a84e21c8a3d5e0e01456adb44062ddec5a6b4970d8d42c","918fa52ae45ed60ba7cc8bdc99c3cbe9ab92e0375ec31fc05d0d4513be11c593"],
+  "malware_families": ["PowerChrome","WUEngine","Shadow C2","MiniPlasma","CloudSyncSvc","GiftDrop","DarkSword"]
+}
