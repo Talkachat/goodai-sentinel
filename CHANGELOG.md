@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.5.1 — 2026-09-30
+- Added: **desktop Control Center** (`desktop/`) — one icon (🛡️ GoodAI Sentinel.app) with a
+  menu for start / stop / status / open-dashboard / restart / last-events / stop-dashboard,
+  plus live status of both the guard and the dashboard. Replaces the separate desktop buttons.
+- Added: `desktop/install-control-center.command` (builds the .app) and desktop README.
+
+## 0.5.0 — 2026-09-29
+- Added: **81 distinct attack-technique families** (`redteam/attacks_extended.py`) — real MITRE-style
+  techniques, not seed mutations. Found 87 genuine gaps the million-mutation tests never could.
+- Added: 26 forbidden-pattern families (interpreter exec, PATH/lib hijack, cron/systemd/launchd
+  persistence, decode-then-exec, fileless, privesc, cred theft, exfil, IMDS, defense evasion,
+  destruction, container secrets, supply chain, firmware, Windows persistence, LSASS, LOLBins).
+- Added: ANSI-C hex/octal decoding to the semantic layer; raw-target normalization before
+  slash-stripping. Technique coverage: 41/128 -> 124/127 (97.6%), 0 over-blocking.
+- Added: `docs/EXTENDED_ATTACKS.md`, `tests/test_extended_attacks.py`. 129 tests total.
+
 ## 0.4.6 — 2026-09-29
 - Fixed (from 1M-input stress test): split/chained execution from temp dirs
   (chmod +x /tmp/a && /tmp/a, curl > /tmp/x; sh /tmp/x) now denied via new chained_exec /

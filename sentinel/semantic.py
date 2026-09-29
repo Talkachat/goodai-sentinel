@@ -45,6 +45,17 @@ def _deobfuscate_quotes(s: str) -> str:
     return "".join(out)
 
 
+def _ansi_c_decode(s: str) -> str:
+    r"""Decode $'...' ANSI-C quoting (\xHH hex, \NNN octal) the way a shell would, so
+    $'\x72\x6d' becomes rm before pattern matching."""
+    import re as _re
+    def repl(m):
+        body = m.group(1)
+        body = _re.sub(r"\\x([0-9a-fA-F]{2})", lambda h: chr(int(h.group(1), 16)), body)
+        body = _re.sub(r"\\([0-7]{1,3})", lambda o: chr(int(o.group(1), 8)), body)
+        return body
+    return _re.sub(r"\$'([^']*)'", repl, s)
+
 def normalize(cmd: str) -> str:
     """Return a de-obfuscated form of `cmd` for intent matching."""
     if not cmd:
@@ -54,6 +65,7 @@ def normalize(cmd: str) -> str:
     while prev != s:                  # expand ${x:-rm} -> rm (nested-safe)
         prev = s
         s = _VAR_DEFAULT.sub(r"\1", s)
+    s = _ansi_c_decode(s)
     s = _CMD_SUBST.sub(lambda m: (m.group(1) or m.group(2) or ""), s)
     s = s.replace("\\\n", "").replace("\u00a0", " ")
     s = _deobfuscate_quotes(s)

@@ -121,6 +121,110 @@
     {
       "name": "temp_exec_chain",
       "regex": "(curl|wget)\\s+.*(>|-o|-O)\\s*/tmp/.*(&&|;|\\|\\|)\\s*(sh|bash|/tmp/)|(curl|wget)[^|]*\\|\\s*(ba|z)?sh"
+    },
+    {
+      "name": "interp_exec",
+      "regex": "(python[0-9.]*|perl|ruby|node|php)\\s+-[ceEm].*(os\\.system|system\\(|child_process|exec\\(|popen|import\\s+os|__import__)|awk\\s+.*system\\("
+    },
+    {
+      "name": "path_hijack",
+      "regex": "export\\s+PATH=/tmp|PATH=(/tmp|/dev/shm|\\.):|LD_LIBRARY_PATH=/tmp"
+    },
+    {
+      "name": "lib_inject",
+      "regex": "\\bLD_PRELOAD=|\\bDYLD_INSERT_LIBRARIES="
+    },
+    {
+      "name": "cron_persist",
+      "regex": "crontab\\s+-|/var/spool/cron|/etc/cron|\\bat\\s+(now|midnight|[0-9])|systemd-run|systemctl\\s+enable|launchctl\\s+(load|submit|bootstrap)"
+    },
+    {
+      "name": "rc_persist",
+      "regex": ">>?\\s*~?/?\\.?(bashrc|zshrc|bash_profile|profile|zprofile)|>>?\\s*/etc/rc\\.local"
+    },
+    {
+      "name": "decode_exec",
+      "regex": "base64\\s+-d.*\\|\\s*(sh|bash)|\\|\\s*base64\\s+-d\\s*\\|\\s*(sh|bash)|xxd\\s+-r\\s+-p\\s*\\|\\s*(sh|bash)|tr\\s+[^|]*\\|\\s*(sh|bash)|\\$'\\\\x[0-9a-f]|\\$'\\\\[0-7]{3}|\\$'\\\\x[0-9a-f]{2}|\\$'\\\\[0-7]{2,3}|\\$'\\\\x[0-9a-f]|\\$'\\\\[0-7]"
+    },
+    {
+      "name": "fileless_mem",
+      "regex": "/proc/self/mem|memfd_create|>\\s*/proc/[0-9]+/mem"
+    },
+    {
+      "name": "privesc_vectors",
+      "regex": ">>?\\s*/etc/sudoers|chmod\\s+4[0-7][0-7][0-7]|setcap\\s+cap_|\\bpkexec\\b|nsenter\\s+-t\\s+1|--privileged.*chroot|mount\\s+/dev/sd.*chroot"
+    },
+    {
+      "name": "cred_theft",
+      "regex": "\\.ssh/id_(rsa|ed25519|ecdsa|dsa)|\\.aws/(credentials|config)|\\.kube/config|\\.config/gcloud|dump-keychain|login\\s*data|\\.(bash|zsh)_history|/run/secrets/|chrome/(default|profile).*(login\\s*data|cookies)|/library/application support/(google|firefox)|application support/google|/chrome/.*(default|login)|cp\\s+.*chrome"
+    },
+    {
+      "name": "exfil_channels",
+      "regex": "nslookup\\s+\\$\\(|dig\\s+\\$\\(|ping\\s+-p\\s+\\$\\(|curl.*-d\\s+@/(etc|home|root)|aws\\s+s3\\s+cp\\s+/(etc|home|root)|-F\\s+.?c?=?@/(etc|shadow)"
+    },
+    {
+      "name": "imds_access",
+      "regex": "169\\.254\\.169\\.254|metadata\\.google\\.internal|metadata-flavor:\\s*google|metadata:true"
+    },
+    {
+      "name": "defense_evasion",
+      "regex": "unset\\s+histfile|histsize=0|set\\s+\\+o\\s+history|touch\\s+-[rt]\\s|auditctl\\s+-e\\s+0|setenforce\\s+0|aa-disable|systemctl\\s+stop\\s+(auditd|apparmor|rsyslog)|iptables\\s+-f\\b|nft\\s+flush|service\\s+rsyslog\\s+stop|iptables\\s+-p\\s+\\w+\\s+accept|selinux=disabled|>\\s*/etc/selinux"
+    },
+    {
+      "name": "destruction2",
+      "regex": ":\\(\\)\\s*\\{\\s*:\\|:&\\s*\\}|find\\s+/.*-delete|find\\s+/.*-exec\\s+(openssl|gpg|rm)|gpg\\s+--encrypt-files|shred\\s+-u|rm\\s+-rf\\s+/(backup|snapshots)|while\\s+true.*do.*(sh|bash)\\s*&|cat\\s+/dev/(zero|urandom)\\s*>\\s*/dev/(sd|disk|nvme)|>\\s*/dev/(sd[a-z]|disk[0-9])"
+    },
+    {
+      "name": "container_secrets",
+      "regex": "kubectl\\s+get\\s+secrets|kubectl\\s+exec.*secrets|--unix-socket\\s+/var/run/docker\\.sock"
+    },
+    {
+      "name": "supply_chain",
+      "regex": "pip\\s+install\\s+.*(--index-url\\s+http://|/tmp/|http://)|npm\\s+install\\s+(http://|https://|/tmp/|git\\+http|\\S+\\.tgz)|(curl|wget)\\s+\\S+\\s*\\|\\s*sudo\\s+(ba)?sh|\\.git/hooks/"
+    },
+    {
+      "name": "win_persist2",
+      "regex": "schtasks\\s+/create|sc\\s+create\\s+\\w+\\s+binpath|wmic\\s+.*__eventfilter|reg\\s+add\\s+.*\\\\(run|winlogon|image\\s+file\\s+execution)"
+    },
+    {
+      "name": "win_uac_disable",
+      "regex": "enablelua\\s+/t\\s+reg_dword\\s+/d\\s+0|reg\\s+add.*enablelua.*\\s0"
+    },
+    {
+      "name": "win_lsass",
+      "regex": "procdump\\s+.*lsass|comsvcs\\.dll\\s+minidump|rundll32.*comsvcs.*minidump"
+    },
+    {
+      "name": "win_lolbin2",
+      "regex": "\\bmshta\\s+(http|vbscript:|javascript:)|regsvr32\\s+.*(/i:http|scrobj)|bitsadmin\\s+.*/transfer"
+    },
+    {
+      "name": "gpu_fw_flash",
+      "regex": "\\bnvflash\\b|\\bafulnx?[0-9]*\\b|\\bamdvbflash\\b"
+    },
+    {
+      "name": "log_wipe_extra",
+      "regex": "(cat\\s+/dev/null|:|truncate\\s+-s\\s*0|>\\s*)\\s*>?\\s*/var/log/|echo\\s+-n\\s*>\\s*/var/log"
+    },
+    {
+      "name": "self_exfil",
+      "regex": "(cp|scp|curl|rsync)\\s+.*(\\.gguf|\\.safetensors|/models/|weights|\\.ckpt|\\.pt\\b).*(/tmp|curl|scp|@)"
+    },
+    {
+      "name": "win_run_key",
+      "regex": "reg\\s+add\\s+.*(currentversion.{0,3}run|\\\\run\\b)"
+    },
+    {
+      "name": "relative_temp_exec",
+      "regex": "^\\s*\\./|/\\.\\./.*/(tmp|shm)/|\\bsh\\s+\\./"
+    },
+    {
+      "name": "agent_replicate",
+      "regex": "spawn\\s+\\d{2,}|replicate\\s+(self|to)|fork\\s+\\d{3,}|clone\\s+(self|agent)"
+    },
+    {
+      "name": "npm_remote",
+      "regex": "npm\\s+install\\s+(http://|https://|/tmp/|git\\+http|\\S+\\.tgz)"
     }
   ],
   "defaults": {

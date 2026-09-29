@@ -1,87 +1,133 @@
-# GoodAI Sentinel — AI-agent guardrail policy.
-# Deny by default. Everything an agent is NOT explicitly granted is refused.
-# Edit freely; the engine reloads on restart. Keep this file itself in deny_targets.
-
-kill_switch: false          # flip to true to freeze ALL agent actions instantly
-
-# Patterns that are NEVER allowed for any agent, regardless of capabilities.
-# These target the classic failure modes: self-preservation, defense evasion,
-# destruction, exfiltration, and privilege escalation.
+kill_switch: false
 forbidden_patterns:
-  disable_defense:    "(stop|kill|disable|uninstall|mask)\\s+.*(sentinel|guardrail|antivirus|firewall|auditd|ufw|iptables|selinux|apparmor)"
-  self_modify:        "(edit|write|modify|patch|replace).*(agent_guardrails|guardrail\\.py|sentinel/|own\\s+(code|weights|prompt))"
-  destroy_data:       "rm\\s+-rf\\s+/|mkfs\\.|dd\\s+if=.*of=/dev|shred\\s|format\\s+[a-z]:|drop\\s+(database|table)\\s+(?!temp)"
-  exfiltrate:         "(curl|wget|scp|rsync|nc)\\s+.*(\\.env|id_rsa|shadow|credentials|token|\\.pem)"
-  download_exec:      "(curl|wget)[^|]*\\|\\s*(ba)?sh"
-  reverse_shell:      "nc\\s+.*-e\\s|/dev/tcp/|mkfifo"
-  privesc:            "sudo\\s+su|pkexec|chmod\\s+[ug]\\+s"
-  credential_access:  "/etc/shadow|/etc/sudoers|authorized_keys|\\.aws/credentials|\\.kube/config"
-  spawn_unbounded:    "(spawn|fork|replicate|copy).*(itself|self|agents?\\s+x?\\d{2,})"
-  control_hardware:   "(flash|overwrite|write).*(firmware|bios|uefi|bootloader|eeprom)"
-  disable_logging:    "(rm|truncate|clear|disable).*(audit|syslog|journal|/var/log)"
-  # --- added from Anthropic threat report, Sep 2026 ---
-  cloud_metadata:     "169\\.254\\.169\\.254|metadata\\.google\\.internal|/latest/meta-data"
-  env_dump:           "/proc/self/environ|\\bprintenv\\b|os\\.environ|Get-ChildItem\\s+env:|\\$ENV:|\\benv\\b\\s*(\\||>)"
-  ai_key_exfil:       "(curl|wget|scp|rsync|nc|Invoke-WebRequest|irm|iwr)\\s+.*(sk-ant-|sk-[A-Za-z0-9]{32}|AKIA[0-9A-Z]{16}|ghp_|xox[baprs]-|api[_-]?key)"
-  disable_updates:    "(stop|disable|mask|config).*(wuauserv|unattended-upgrades|softwareupdate|Set-MpPreference)"
-  register_device:    "(register|enroll|join).*(device|tenant).*(actor|attacker|our|my)|deviceRegistration|/devicemanagement/"
-  webshell:           "(mu-plugins|wp-content/uploads).*\\.(php|phtml)|\\.(woff2?|ttf|css)\\.php"
-
-# Applied to every agent unless overridden in `agents`.
-  ws_destroy:         "r[\\s\\u00a0\"'`]*m[\\s\\u00a0]*-[\\s\\u00a0]*rf|of[\\s\\u00a0]*=[\\s\\u00a0]*/dev/"
-  ws_disable_defense: "s[\\s\\u00a0\"'`]*t[\\s\\u00a0\"'`]*o[\\s\\u00a0\"'`]*p[\\s\\u00a0]+\\w*def"
-  ws_ransomware:      "d[\\s\\u00a0\"'`]*e[\\s\\u00a0\"'`]*l[\\s\\u00a0\"'`]*e[\\s\\u00a0\"'`]*t[\\s\\u00a0\"'`]*e[\\s\\u00a0]+shadow"
-
-  win_firewall_off:   "netsh\\s+advfirewall\\s+set\\s+\\w+\\s+state\\s+off|netsh\\s+firewall\\s+set\\s+opmode\\s+disable"
-  defender_off:       "set[\\s-]+mppreference\\s+.*(disablerealtimemonitoring|disableioavprotection|disablebehaviormonitoring)|mpcmdrun\\s+.*-removedefinitions|add[\\s-]+mppreference\\s+.*exclusionpath"
-  backup_destroy:     "wbadmin\\s+delete|bcdedit\\s+.*(recoveryenabled\\s+no|bootstatuspolicy)|vssadmin\\s+.*delete|wmic\\s+shadowcopy\\s+delete"
-  sam_dump:           "reg\\s+save\\s+.*hklm[\\\\/]+(sam|system|security)|reg\\s+export\\s+.*sam|\\bntdsutil\\b|\\bsecretsdump\\b|\\bmimikatz\\b"
-  ps_encoded:         "powershell.*(-e(nc|ncodedcommand)?\\s|-enc\\b|frombase64string|-nop\\s+-w\\s+hidden|-windowstyle\\s+hidden.*-enc)"
-  firmware_flash:     "\\bflashrom\\b|\\bfwupd\\b.*--force|dd\\s+.*of=/dev/(sd|nvme|mtd)|\\besptool\\b.*write_flash"
-  clear_event_log:    "wevtutil\\s+cl|Clear-EventLog|auditpol\\s+.*/clear|Remove-EventLog"
-  lolbin_exec:        "\\b(certutil|bitsadmin|mshta|regsvr32|rundll32)\\b.*(http|-urlcache|javascript:|scrobj|/i:)|\\bwmic\\b.*process\\s+call\\s+create"
-
-  chained_exec:       "(&&|;|\\|\\|)\\s*(/tmp/|/dev/shm/|/var/tmp/|\\./)|chmod\\s+\\+x\\s+/tmp/.*(&&|;)|\\b(sh|bash|zsh)\\s+/tmp/|(>|>>)\\s*/tmp/\\S+\\s*(&&|;)\\s*(sh|bash)"
-  temp_exec_chain:    "(curl|wget)\\s+.*(>|-o|-O)\\s*/tmp/.*(&&|;|\\|\\|)\\s*(sh|bash|/tmp/)|(curl|wget)[^|]*\\|\\s*(ba|z)?sh"
-
+  disable_defense: (stop|kill|disable|uninstall|mask)\s+.*(sentinel|guardrail|antivirus|firewall|auditd|ufw|iptables|selinux|apparmor)
+  self_modify: (edit|write|modify|patch|replace).*(agent_guardrails|guardrail\.py|sentinel/|own\s+(code|weights|prompt))
+  destroy_data: rm\s+-rf\s+/|mkfs\.|dd\s+if=.*of=/dev|shred\s|format\s+[a-z]:|drop\s+(database|table)\s+(?!temp)
+  exfiltrate: (curl|wget|scp|rsync|nc)\s+.*(\.env|id_rsa|shadow|credentials|token|\.pem)
+  download_exec: (curl|wget)[^|]*\|\s*(ba)?sh
+  reverse_shell: nc\s+.*-e\s|/dev/tcp/|mkfifo
+  privesc: sudo\s+su|pkexec|chmod\s+[ug]\+s
+  credential_access: /etc/shadow|/etc/sudoers|authorized_keys|\.aws/credentials|\.kube/config
+  spawn_unbounded: (spawn|fork|replicate|copy).*(itself|self|agents?\s+x?\d{2,})
+  control_hardware: (flash|overwrite|write).*(firmware|bios|uefi|bootloader|eeprom)
+  disable_logging: (rm|truncate|clear|disable).*(audit|syslog|journal|/var/log)
+  cloud_metadata: 169\.254\.169\.254|metadata\.google\.internal|/latest/meta-data
+  env_dump: /proc/self/environ|\bprintenv\b|os\.environ|Get-ChildItem\s+env:|\$ENV:|\benv\b\s*(\||>)
+  ai_key_exfil: (curl|wget|scp|rsync|nc|Invoke-WebRequest|irm|iwr)\s+.*(sk-ant-|sk-[A-Za-z0-9]{32}|AKIA[0-9A-Z]{16}|ghp_|xox[baprs]-|api[_-]?key)
+  disable_updates: (stop|disable|mask|config).*(wuauserv|unattended-upgrades|softwareupdate|Set-MpPreference)
+  register_device: (register|enroll|join).*(device|tenant).*(actor|attacker|our|my)|deviceRegistration|/devicemanagement/
+  webshell: (mu-plugins|wp-content/uploads).*\.(php|phtml)|\.(woff2?|ttf|css)\.php
+  ws_destroy: r[\s\u00a0"'`]*m[\s\u00a0]*-[\s\u00a0]*rf|of[\s\u00a0]*=[\s\u00a0]*/dev/
+  ws_disable_defense: s[\s\u00a0"'`]*t[\s\u00a0"'`]*o[\s\u00a0"'`]*p[\s\u00a0]+\w*def
+  ws_ransomware: d[\s\u00a0"'`]*e[\s\u00a0"'`]*l[\s\u00a0"'`]*e[\s\u00a0"'`]*t[\s\u00a0"'`]*e[\s\u00a0]+shadow
+  win_firewall_off: netsh\s+advfirewall\s+set\s+\w+\s+state\s+off|netsh\s+firewall\s+set\s+opmode\s+disable
+  defender_off: set[\s-]+mppreference\s+.*(disablerealtimemonitoring|disableioavprotection|disablebehaviormonitoring)|mpcmdrun\s+.*-removedefinitions|add[\s-]+mppreference\s+.*exclusionpath
+  backup_destroy: wbadmin\s+delete|bcdedit\s+.*(recoveryenabled\s+no|bootstatuspolicy)|vssadmin\s+.*delete|wmic\s+shadowcopy\s+delete
+  sam_dump: reg\s+save\s+.*hklm[\\/]+(sam|system|security)|reg\s+export\s+.*sam|\bntdsutil\b|\bsecretsdump\b|\bmimikatz\b
+  ps_encoded: powershell.*(-e(nc|ncodedcommand)?\s|-enc\b|frombase64string|-nop\s+-w\s+hidden|-windowstyle\s+hidden.*-enc)
+  firmware_flash: \bflashrom\b|\bfwupd\b.*--force|dd\s+.*of=/dev/(sd|nvme|mtd)|\besptool\b.*write_flash
+  clear_event_log: wevtutil\s+cl|Clear-EventLog|auditpol\s+.*/clear|Remove-EventLog
+  lolbin_exec: \b(certutil|bitsadmin|mshta|regsvr32|rundll32)\b.*(http|-urlcache|javascript:|scrobj|/i:)|\bwmic\b.*process\s+call\s+create
+  chained_exec: (&&|;|\|\|)\s*(/tmp/|/dev/shm/|/var/tmp/|\./)|chmod\s+\+x\s+/tmp/.*(&&|;)|\b(sh|bash|zsh)\s+/tmp/|(>|>>)\s*/tmp/\S+\s*(&&|;)\s*(sh|bash)
+  temp_exec_chain: (curl|wget)\s+.*(>|-o|-O)\s*/tmp/.*(&&|;|\|\|)\s*(sh|bash|/tmp/)|(curl|wget)[^|]*\|\s*(ba|z)?sh
+  interp_exec: (python[0-9.]*|perl|ruby|node|php)\s+-[ceEm].*(os\.system|system\(|child_process|exec\(|popen|import\s+os|__import__)|awk\s+.*system\(
+  path_hijack: export\s+PATH=/tmp|PATH=(/tmp|/dev/shm|\.):|LD_LIBRARY_PATH=/tmp
+  lib_inject: \bLD_PRELOAD=|\bDYLD_INSERT_LIBRARIES=
+  cron_persist: crontab\s+-|/var/spool/cron|/etc/cron|\bat\s+(now|midnight|[0-9])|systemd-run|systemctl\s+enable|launchctl\s+(load|submit|bootstrap)
+  rc_persist: '>>?\s*~?/?\.?(bashrc|zshrc|bash_profile|profile|zprofile)|>>?\s*/etc/rc\.local'
+  decode_exec: base64\s+-d.*\|\s*(sh|bash)|\|\s*base64\s+-d\s*\|\s*(sh|bash)|xxd\s+-r\s+-p\s*\|\s*(sh|bash)|tr\s+[^|]*\|\s*(sh|bash)|\$'\\x[0-9a-f]|\$'\\[0-7]{3}|\$'\\x[0-9a-f]{2}|\$'\\[0-7]{2,3}|\$'\\x[0-9a-f]|\$'\\[0-7]
+  fileless_mem: /proc/self/mem|memfd_create|>\s*/proc/[0-9]+/mem
+  privesc_vectors: '>>?\s*/etc/sudoers|chmod\s+4[0-7][0-7][0-7]|setcap\s+cap_|\bpkexec\b|nsenter\s+-t\s+1|--privileged.*chroot|mount\s+/dev/sd.*chroot'
+  cred_theft: \.ssh/id_(rsa|ed25519|ecdsa|dsa)|\.aws/(credentials|config)|\.kube/config|\.config/gcloud|dump-keychain|login\s*data|\.(bash|zsh)_history|/run/secrets/|chrome/(default|profile).*(login\s*data|cookies)|/library/application support/(google|firefox)|application support/google|/chrome/.*(default|login)|cp\s+.*chrome
+  exfil_channels: nslookup\s+\$\(|dig\s+\$\(|ping\s+-p\s+\$\(|curl.*-d\s+@/(etc|home|root)|aws\s+s3\s+cp\s+/(etc|home|root)|-F\s+.?c?=?@/(etc|shadow)
+  imds_access: 169\.254\.169\.254|metadata\.google\.internal|metadata-flavor:\s*google|metadata:true
+  defense_evasion: unset\s+histfile|histsize=0|set\s+\+o\s+history|touch\s+-[rt]\s|auditctl\s+-e\s+0|setenforce\s+0|aa-disable|systemctl\s+stop\s+(auditd|apparmor|rsyslog)|iptables\s+-f\b|nft\s+flush|service\s+rsyslog\s+stop|iptables\s+-p\s+\w+\s+accept|selinux=disabled|>\s*/etc/selinux
+  destruction2: :\(\)\s*\{\s*:\|:&\s*\}|find\s+/.*-delete|find\s+/.*-exec\s+(openssl|gpg|rm)|gpg\s+--encrypt-files|shred\s+-u|rm\s+-rf\s+/(backup|snapshots)|while\s+true.*do.*(sh|bash)\s*&|cat\s+/dev/(zero|urandom)\s*>\s*/dev/(sd|disk|nvme)|>\s*/dev/(sd[a-z]|disk[0-9])
+  container_secrets: kubectl\s+get\s+secrets|kubectl\s+exec.*secrets|--unix-socket\s+/var/run/docker\.sock
+  supply_chain: pip\s+install\s+.*(--index-url\s+http://|/tmp/|http://)|npm\s+install\s+(http://|https://|/tmp/|git\+http|\S+\.tgz)|(curl|wget)\s+[^|]*\|\s*sudo\s+(ba)?sh|\.git/hooks/
+  win_persist2: schtasks\s+/create|sc\s+create\s+\w+\s+binpath|wmic\s+.*__eventfilter|reg\s+add\s+.*\\(run|winlogon|image\s+file\s+execution)
+  win_uac_disable: enablelua\s+/t\s+reg_dword\s+/d\s+0|reg\s+add.*enablelua.*\s0
+  win_lsass: procdump\s+.*lsass|comsvcs\.dll\s+minidump|rundll32.*comsvcs.*minidump
+  win_lolbin2: \bmshta\s+(http|vbscript:|javascript:)|regsvr32\s+.*(/i:http|scrobj)|bitsadmin\s+.*/transfer
+  gpu_fw_flash: \bnvflash\b|\bafulnx?[0-9]*\b|\bamdvbflash\b
+  log_wipe_extra: (cat\s+/dev/null|:|truncate\s+-s\s*0|>\s*)\s*>?\s*/var/log/|echo\s+-n\s*>\s*/var/log
+  self_exfil: (cp|scp|curl|rsync)\s+.*(\.gguf|\.safetensors|/models/|weights|\.ckpt|\.pt\b).*(/tmp|curl|scp|@)
+  win_run_key: reg\s+add\s+.*(currentversion.{0,3}run|\\run\b)
+  relative_temp_exec: ^\s*\./|/\.\./.*/(tmp|shm)/|\bsh\s+\./
+  agent_replicate: spawn\s+\d{2,}|replicate\s+(self|to)|fork\s+\d{3,}|clone\s+(self|agent)
+  npm_remote: npm\s+install\s+(http://|https://|/tmp/|git\+http|\S+\.tgz)
 defaults:
-  capabilities: ["read:*", "search:*", "summarize:*"]
+  capabilities:
+  - read:*
+  - search:*
+  - summarize:*
   deny_targets:
-    - "/etc/*"
-    - "/boot/*"
-    - "/root/*"
-    - "*/.ssh/*"
-    - "*/.env"
-    - "*/policy/agent_guardrails.yaml"
-    - "*/sentinel/*"
-  rate_limit: { max: 60, window_s: 60 }
+  - /etc/*
+  - /boot/*
+  - /root/*
+  - '*/.ssh/*'
+  - '*/.env'
+  - '*/policy/agent_guardrails.yaml'
+  - '*/sentinel/*'
+  rate_limit:
+    max: 60
+    window_s: 60
   budget: 100.0
-  require_approval: ["delete:*", "deploy:*", "send:*", "pay:*", "shell:*", "spawn:*", "register:*"]
-
-# Per-agent overrides. Keys are glob patterns on agent_id.
+  require_approval:
+  - delete:*
+  - deploy:*
+  - send:*
+  - pay:*
+  - shell:*
+  - spawn:*
+  - register:*
 agents:
-
-  "os-activity":                                          # OS-level activity observed by the independent enforcer
-    capabilities: ["exec", "net:connect", "read:*"]       # allowed to *exist*; forbidden_patterns still apply to the command
+  os-activity:
+    capabilities:
+    - exec
+    - net:connect
+    - read:*
     deny_targets:
-      - "*id_rsa*"
-      - "*/shadow"
-      - "*/etc/sudoers*"
-    rate_limit: { max: 100000, window_s: 60 }
+    - '*id_rsa*'
+    - '*/shadow'
+    - '*/etc/sudoers*'
+    rate_limit:
+      max: 100000
+      window_s: 60
     budget: 1000000.0
-  "coder-*":
-    capabilities: ["read:*", "write:file", "run:test", "run:lint", "shell:*"]
-    allow_targets: ["/workspace/*", "/tmp/*"]
-    require_approval: ["shell:*", "delete:*", "write:*.yaml", "write:*.yml"]
-    rate_limit: { max: 120, window_s: 60 }
+  coder-*:
+    capabilities:
+    - read:*
+    - write:file
+    - run:test
+    - run:lint
+    - shell:*
+    allow_targets:
+    - /workspace/*
+    - /tmp/*
+    require_approval:
+    - shell:*
+    - delete:*
+    - write:*.yaml
+    - write:*.yml
+    rate_limit:
+      max: 120
+      window_s: 60
     budget: 500.0
-
-  "ops-*":
-    capabilities: ["read:*", "restart:service", "scale:*", "deploy:*"]
-    require_approval: ["deploy:prod*", "scale:*"]
+  ops-*:
+    capabilities:
+    - read:*
+    - restart:service
+    - scale:*
+    - deploy:*
+    require_approval:
+    - deploy:prod*
+    - scale:*
     budget: 50.0
-
-  "untrusted-*":
-    capabilities: ["read:public/*"]
-    rate_limit: { max: 10, window_s: 60 }
+  untrusted-*:
+    capabilities:
+    - read:public/*
+    rate_limit:
+      max: 10
+      window_s: 60
     budget: 5.0

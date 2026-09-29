@@ -128,9 +128,12 @@ class Guardrail:
             return Decision("deny", f"'{action}' requires a target", "empty_target")
         cfg = self._agent(agent)
         blob = f"{action} {target}"
-        # Semantic layer: also test the DE-OBFUSCATED command, so quote-splitting (r"m")
-        # and variable indirection (${x:-rm}) can't smuggle intent past literal patterns.
+        # Semantic layer: also test the DE-OBFUSCATED command, so quote-splitting (r"m"),
+        # variable indirection (${x:-rm}) and ANSI-C hex/octal ($'\x72\x6d') can't smuggle
+        # intent past literal patterns. Normalize the RAW target too, before slash-normalization
+        # eats the backslashes that hex/octal escapes rely on.
         deob = normalize(blob)
+        deob_raw = normalize(f"{action} {raw_target}")
 
         # 0. Kill switch
         if self.policy.get("kill_switch"):
@@ -141,6 +144,8 @@ class Guardrail:
             if rx.search(blob):
                 return Decision("deny", f"matches forbidden pattern '{name}'", "forbidden_patterns")
             if deob != blob and rx.search(deob):
+                return Decision("deny", f"matches forbidden pattern '{name}' (de-obfuscated)", "forbidden_patterns")
+            if deob_raw != deob and rx.search(deob_raw):
                 return Decision("deny", f"matches forbidden pattern '{name}' (de-obfuscated)", "forbidden_patterns")
 
         # 2. Capability scoping: action must be in the agent's allowed set
