@@ -38,6 +38,8 @@ class Sentinel:
         self.responder = Responder(self.audit, dry_run=dry_run, autonomous=autonomous,
                                    approver=approver, notify=notify)
         self.stats = {"events": 0, "findings": 0, "denied": 0, "approval": 0}
+        self.audit.write({"event": "service_started", "os": __import__("sentinel.platform", fromlist=["OS"]).OS,
+                          "dry_run": dry_run, "watching": list(watch_paths)})
         self.policy_watcher = None
         if watch_policy:
             self.policy_watcher = PolicyWatcher(
@@ -89,8 +91,12 @@ class Sentinel:
                     out.append(f)
         return out
 
-    def run(self, interval: float = 2.0, duration: float | None = None):
-        start = time.time()
+    def run(self, interval: float = 2.0, duration: float | None = None, heartbeat_s: float = 300.0):
+        start = time.time(); last_hb = start
         while duration is None or time.time() - start < duration:
             self.tick()
+            now = time.time()
+            if now - last_hb >= heartbeat_s:      # periodic proof-of-life so the audit file advances
+                self.audit.write({"event": "heartbeat", "uptime_s": round(now - start), "stats": dict(self.stats)})
+                last_hb = now
             time.sleep(interval)

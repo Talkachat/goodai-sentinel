@@ -5,6 +5,7 @@ import hashlib, json, queue, threading, time
 from pathlib import Path
 from .responder import AuditLog
 from .audit_store import AuditStore
+from .masking import redact
 
 
 class AsyncAuditLog(AuditLog):
@@ -25,7 +26,7 @@ class AsyncAuditLog(AuditLog):
     def write(self, record: dict):                 # hot path: enqueue only
         if self._stop.is_set():
             raise RuntimeError("AsyncAuditLog is closed; refusing write (audit integrity)")
-        rec = {**record, "ts": time.time()}
+        rec = {**redact(record), "ts": time.time()}  # scrub secrets/PII before que/spill
         try:
             self.q.put_nowait(rec)
             return

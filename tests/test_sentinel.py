@@ -160,3 +160,17 @@ def test_mobile_policy_export_and_conformance():
         assert (Path(d)/"policy.json").exists() and (Path(d)/"conformance.json").exists()
     assert re.match(glob_to_regex("/workspace/*"), "/workspace/a/b.py") and not re.match(glob_to_regex("/workspace/*"), "/etc/x")
     assert len(CASES) >= 15   # conformance() inside export() asserts every case against the Python engine
+
+
+def test_service_startup_record_and_heartbeat(tmp_path):
+    """Device-test finding D4: audit file must exist as soon as the service runs."""
+    from sentinel.core import Sentinel
+    import json
+    a = tmp_path / "audit.jsonl"
+    s = Sentinel(watch_paths=[str(tmp_path)], audit_path=str(a), notify=lambda m: None, warmup_s=0)
+    assert a.exists()                              # created at construction, before any finding
+    first = json.loads(a.read_text().splitlines()[0])
+    assert first["event"] == "service_started"
+    s.run(interval=0.01, duration=0.05, heartbeat_s=0.0)   # heartbeat_s=0 -> beat every tick
+    events = [json.loads(l).get("event") for l in a.read_text().splitlines()]
+    assert "heartbeat" in events

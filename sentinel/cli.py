@@ -15,14 +15,14 @@ def main(argv=None):
     a = p.parse_args(argv)
     s = Sentinel(watch_paths=a.watch, dry_run=not a.live, autonomous=a.autonomous,
                  warmup_s=a.warmup, audit_path=a.audit, watch_policy=a.watch_policy)
-    print(f"Sentinel up on {OS}. dry_run={not a.live} autonomous={a.autonomous} watching={a.watch}", file=sys.stderr)
+    print(f"Sentinel up on {OS}. dry_run={not a.live} autonomous={a.autonomous} watching={a.watch}")
     if a.live and not is_admin():
         print("warning: --live without admin/root: network blocks and some isolations will fail", file=sys.stderr)
     try:
         s.run(a.interval, a.duration)
     except KeyboardInterrupt:
         pass
-    print(f"stats: {s.stats}", file=sys.stderr)
+    print(f"stats: {s.stats}")
 
 if __name__ == "__main__":
     main()

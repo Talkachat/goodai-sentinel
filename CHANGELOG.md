@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1 — 2026-09-28
+- Added: audit **PII/secret masking** (`sentinel/masking.py`). Tokens, API keys, private-key
+  blocks, key=value secrets, emails and card numbers are redacted before any record is written
+  (sync + async + spill). Redaction is central, unbypassable, and chain-safe.
+- Added: `docs/PRIVACY.md`.
+- Tests: masking suite (7) added.
+
 ## 0.2.4 — 2026-09-13
 Independent cowork audit (review #4); see docs/REVIEW_4.md.
 - Fixed (N1): percent-encoded / null-byte traversal in targets is denied (encoded_target).

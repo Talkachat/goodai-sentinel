@@ -1,0 +1,19 @@
+name: security
+on: [push, pull_request]
+jobs:
+  test-and-redteam:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e ".[test]"
+      - name: Unit tests
+        run: pytest -q
+      - name: Guardrail red team (fails on any breach or over-block)
+        run: python -m redteam.run
+      - name: Adaptive red team (discovery; uploads proposed rules, non-blocking)
+        run: python -m redteam.adaptive || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: proposed-rules, path: redteam/proposed_rules.json }

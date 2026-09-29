@@ -117,4 +117,4 @@ def test_pending_queue_is_bounded():
 
 # F10 packaging: plain pytest works (this file running under `pytest` proves it) and version bumped
 def test_version():
-    import sentinel; assert sentinel.__version__.startswith("0.2.")
+    import sentinel; assert sentinel.__version__ >= "0.2"

@@ -9,6 +9,7 @@ import json, subprocess, threading, time
 from pathlib import Path
 from typing import Callable
 from .events import Finding
+from .masking import redact
 from . import platform as plat
 
 try:
@@ -33,6 +34,7 @@ class AuditLog:
 
     def write(self, record: dict):
         import hashlib
+        record = redact(record)                # scrub secrets/PII before anything is persisted
         with self._lock:                       # chain computation + append are one critical section
             record = {**record, "ts": time.time(), "prev": self._prev}
             h = hashlib.sha256(json.dumps(record, sort_keys=True, default=str).encode()).hexdigest()
