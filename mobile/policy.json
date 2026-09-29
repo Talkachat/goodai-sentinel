@@ -81,6 +81,46 @@
     {
       "name": "ws_ransomware",
       "regex": "d[\\s\\u00a0\"'`]*e[\\s\\u00a0\"'`]*l[\\s\\u00a0\"'`]*e[\\s\\u00a0\"'`]*t[\\s\\u00a0\"'`]*e[\\s\\u00a0]+shadow"
+    },
+    {
+      "name": "win_firewall_off",
+      "regex": "netsh\\s+advfirewall\\s+set\\s+\\w+\\s+state\\s+off|netsh\\s+firewall\\s+set\\s+opmode\\s+disable"
+    },
+    {
+      "name": "defender_off",
+      "regex": "set[\\s-]+mppreference\\s+.*(disablerealtimemonitoring|disableioavprotection|disablebehaviormonitoring)|mpcmdrun\\s+.*-removedefinitions|add[\\s-]+mppreference\\s+.*exclusionpath"
+    },
+    {
+      "name": "backup_destroy",
+      "regex": "wbadmin\\s+delete|bcdedit\\s+.*(recoveryenabled\\s+no|bootstatuspolicy)|vssadmin\\s+.*delete|wmic\\s+shadowcopy\\s+delete"
+    },
+    {
+      "name": "sam_dump",
+      "regex": "reg\\s+save\\s+.*hklm[\\\\/]+(sam|system|security)|reg\\s+export\\s+.*sam|\\bntdsutil\\b|\\bsecretsdump\\b|\\bmimikatz\\b"
+    },
+    {
+      "name": "ps_encoded",
+      "regex": "powershell.*(-e(nc|ncodedcommand)?\\s|-enc\\b|frombase64string|-nop\\s+-w\\s+hidden|-windowstyle\\s+hidden.*-enc)"
+    },
+    {
+      "name": "firmware_flash",
+      "regex": "\\bflashrom\\b|\\bfwupd\\b.*--force|dd\\s+.*of=/dev/(sd|nvme|mtd)|\\besptool\\b.*write_flash"
+    },
+    {
+      "name": "clear_event_log",
+      "regex": "wevtutil\\s+cl|Clear-EventLog|auditpol\\s+.*/clear|Remove-EventLog"
+    },
+    {
+      "name": "lolbin_exec",
+      "regex": "\\b(certutil|bitsadmin|mshta|regsvr32|rundll32)\\b.*(http|-urlcache|javascript:|scrobj|/i:)|\\bwmic\\b.*process\\s+call\\s+create"
+    },
+    {
+      "name": "chained_exec",
+      "regex": "(&&|;|\\|\\|)\\s*(/tmp/|/dev/shm/|/var/tmp/|\\./)|chmod\\s+\\+x\\s+/tmp/.*(&&|;)|\\b(sh|bash|zsh)\\s+/tmp/|(>|>>)\\s*/tmp/\\S+\\s*(&&|;)\\s*(sh|bash)"
+    },
+    {
+      "name": "temp_exec_chain",
+      "regex": "(curl|wget)\\s+.*(>|-o|-O)\\s*/tmp/.*(&&|;|\\|\\|)\\s*(sh|bash|/tmp/)|(curl|wget)[^|]*\\|\\s*(ba|z)?sh"
     }
   ],
   "defaults": {
@@ -115,6 +155,36 @@
     "budget": 100.0
   },
   "agents": [
+    {
+      "match": "^os\\-activity$",
+      "config": {
+        "capabilities": [
+          "^exec$",
+          "^net:connect$",
+          "^read:.*$"
+        ],
+        "denyTargets": [
+          "^.*id_rsa.*$",
+          "^.*/shadow$",
+          "^.*/etc/sudoers.*$"
+        ],
+        "allowTargets": [],
+        "requireApproval": [
+          "^delete:.*$",
+          "^deploy:.*$",
+          "^send:.*$",
+          "^pay:.*$",
+          "^shell:.*$",
+          "^spawn:.*$",
+          "^register:.*$"
+        ],
+        "rateLimit": {
+          "max": 100000,
+          "window_s": 60
+        },
+        "budget": 1000000.0
+      }
+    },
     {
       "match": "^coder\\-.*$",
       "config": {

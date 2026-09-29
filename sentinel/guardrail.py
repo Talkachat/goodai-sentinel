@@ -13,6 +13,7 @@ from pathlib import Path
 import yaml
 from .events import Event
 from .platform import norm_path
+from .semantic import normalize
 import posixpath, math
 
 @dataclass
@@ -120,11 +121,16 @@ class Guardrail:
         if "\x00" in raw_target:
             return Decision("deny", "null byte in target", "null_target")
         target = self._canon(raw_target)
+        if target.strip() == '':
+            target = ''  # whitespace-only target counts as empty for the FS-action check
         # a filesystem action with no target cannot be scope-checked -> refuse
         if not target and any(action.startswith(a) or action == a for a in self.FS_ACTIONS):
             return Decision("deny", f"'{action}' requires a target", "empty_target")
         cfg = self._agent(agent)
         blob = f"{action} {target}"
+        # Semantic layer: also test the DE-OBFUSCATED command, so quote-splitting (r"m")
+        # and variable indirection (${x:-rm}) can't smuggle intent past literal patterns.
+        deob = normalize(blob)
 
         # 0. Kill switch
         if self.policy.get("kill_switch"):
@@ -134,6 +140,8 @@ class Guardrail:
         for rx, name in self._compiled:
             if rx.search(blob):
                 return Decision("deny", f"matches forbidden pattern '{name}'", "forbidden_patterns")
+            if deob != blob and rx.search(deob):
+                return Decision("deny", f"matches forbidden pattern '{name}' (de-obfuscated)", "forbidden_patterns")
 
         # 2. Capability scoping: action must be in the agent's allowed set
         caps = cfg["capabilities"]

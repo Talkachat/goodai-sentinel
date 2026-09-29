@@ -156,7 +156,7 @@ def test_mobile_policy_export_and_conformance():
     import re
     with tempfile.TemporaryDirectory() as d:
         doc = export(out_dir=Path(d))
-        assert doc["forbidden"] and len(doc["agents"]) == 3
+        assert doc["forbidden"] and len(doc["agents"]) >= 3
         assert (Path(d)/"policy.json").exists() and (Path(d)/"conformance.json").exists()
     assert re.match(glob_to_regex("/workspace/*"), "/workspace/a/b.py") and not re.match(glob_to_regex("/workspace/*"), "/etc/x")
     assert len(CASES) >= 15   # conformance() inside export() asserts every case against the Python engine

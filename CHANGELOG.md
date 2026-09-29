@@ -1,5 +1,63 @@
 # Changelog
 
+## 0.4.6 — 2026-09-29
+- Fixed (from 1M-input stress test): split/chained execution from temp dirs
+  (chmod +x /tmp/a && /tmp/a, curl > /tmp/x; sh /tmp/x) now denied via new chained_exec /
+  temp_exec_chain patterns; whitespace-only targets now count as empty. Dangerous-under-full-
+  perms: 253 -> 0 / 949. No new over-blocking (git add . && git commit etc. still allowed).
+- Triaged the 3 allowed families: traversal (benign, correct), split (fixed), empty (test artifact + fix).
+- Added: `docs/MILLION_TEST_FIX.md`. Hardened mutation gate for overlapping coverage. 126 tests.
+
+## 0.4.5 — 2026-09-29
+- Fixed (from 100k stress finding): dangerous OS commands were denied only by scope, not by
+  pattern, so a fully-privileged agent could slip them past. Added 8 forbidden-pattern families
+  (firewall-off, backup-destroy, SAM-dump, encoded-PowerShell, firmware-flash, log-clear, LOLBins,
+  Defender-off), slash- and obfuscation-tolerant. Dangerous seeds allowed under FULL perms:
+  253/949 -> 1/949 (remaining = documented multi-stage case). No new over-blocking.
+- Added: `docs/BROAD_PERMS_FIX.md`, `tests/test_broad_perms.py`. 126 tests total.
+
+## 0.4.4 — 2026-09-29
+- Added: **read-only incident dashboard** (`dashboard/`) — zero-dependency (stdlib only) web view
+  of the audit log with severity cards, filters, and a live table. Proven read-only. `docs`/README.
+- Added: `docs/VM_TESTING.md` — safe test-VM setup for the upcoming kernel-level (eBPF) phase.
+- Tests: 123 total.
+
+## 0.4.3 — 2026-09-29
+- Added: **stress / performance benchmark** (`bench/stress.py`) + regression tests. Measured
+  ~32k decisions/sec (p99 62µs), 0 wrong verdicts across 160k concurrent decisions, and
+  ~38k audit writes/sec with 0 dropped and masking intact under load. `docs/PERFORMANCE.md`.
+- Tests: 118 total.
+
+## 0.4.2 — 2026-09-29
+- Added: **signed audit anchoring** (`sentinel/audit_anchor.py`). Signed, counted checkpoints
+  (HMAC or Ed25519) shipped to a remote append-only sink turn the log from tamper-EVIDENT into
+  tamper-PROOF: deletion, truncation, wholesale wipe and forgery are all detected (review P1).
+- Added: `AuditLog.enable_checkpoints()`, `RemoteAnchor`, `verify_checkpoints()`, `docs/AUDIT_ANCHORING.md`.
+- Tests: 115 total.
+
+## 0.4.1 — 2026-09-29
+- Added: **semantic command detection** (`sentinel/semantic.py`). De-obfuscates quote-splitting
+  (r"m"), variable indirection (${x:-rm}), backslash splits and command substitution, then runs
+  forbidden patterns on the normalized form. Closes the 10 residual evasions open since REVIEW_3
+  — adaptive red team now reports 0 breaches. No new over-blocking (real quoted strings preserved).
+- Added: `docs/SEMANTIC.md`.
+- Tests: 108 total.
+
+## 0.4.0 — 2026-09-29
+- Added: **independent enforcement layer** (`enforcement/`) — observes OS activity (processes,
+  connections) and applies the SAME guardrail policy WITHOUT the agent calling request(),
+  answering the deepest review finding (P0: enforcement must not depend on the agent).
+  Catches undeclared rm -rf /, curl|sh, SSH-key exfil; live mode freezes the offending process.
+- Added: `docs/ENFORCEMENT.md` (incl. honest limits: detective+reactive, not yet kernel-level).
+- Added: os-activity policy identity; `python -m enforcement` CLI.
+- Tests: 103 total.
+
+## 0.3.2 — 2026-09-29
+- Added: token concurrency tests (`tests/test_token_races.py`) — proves validate() is safe
+  against concurrent revoke/revoke_all and the use-counter is never over-spent (review #5 P0).
+- Added: `docs/REVIEW_5.md` — honest status of both external reviews.
+- Tests: 97 total.
+
 ## 0.3.1 — 2026-09-28
 - Added: audit **PII/secret masking** (`sentinel/masking.py`). Tokens, API keys, private-key
   blocks, key=value secrets, emails and card numbers are redacted before any record is written

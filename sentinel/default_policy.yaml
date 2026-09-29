@@ -32,6 +32,18 @@ forbidden_patterns:
   ws_disable_defense: "s[\\s\\u00a0\"'`]*t[\\s\\u00a0\"'`]*o[\\s\\u00a0\"'`]*p[\\s\\u00a0]+\\w*def"
   ws_ransomware:      "d[\\s\\u00a0\"'`]*e[\\s\\u00a0\"'`]*l[\\s\\u00a0\"'`]*e[\\s\\u00a0\"'`]*t[\\s\\u00a0\"'`]*e[\\s\\u00a0]+shadow"
 
+  win_firewall_off:   "netsh\\s+advfirewall\\s+set\\s+\\w+\\s+state\\s+off|netsh\\s+firewall\\s+set\\s+opmode\\s+disable"
+  defender_off:       "set[\\s-]+mppreference\\s+.*(disablerealtimemonitoring|disableioavprotection|disablebehaviormonitoring)|mpcmdrun\\s+.*-removedefinitions|add[\\s-]+mppreference\\s+.*exclusionpath"
+  backup_destroy:     "wbadmin\\s+delete|bcdedit\\s+.*(recoveryenabled\\s+no|bootstatuspolicy)|vssadmin\\s+.*delete|wmic\\s+shadowcopy\\s+delete"
+  sam_dump:           "reg\\s+save\\s+.*hklm[\\\\/]+(sam|system|security)|reg\\s+export\\s+.*sam|\\bntdsutil\\b|\\bsecretsdump\\b|\\bmimikatz\\b"
+  ps_encoded:         "powershell.*(-e(nc|ncodedcommand)?\\s|-enc\\b|frombase64string|-nop\\s+-w\\s+hidden|-windowstyle\\s+hidden.*-enc)"
+  firmware_flash:     "\\bflashrom\\b|\\bfwupd\\b.*--force|dd\\s+.*of=/dev/(sd|nvme|mtd)|\\besptool\\b.*write_flash"
+  clear_event_log:    "wevtutil\\s+cl|Clear-EventLog|auditpol\\s+.*/clear|Remove-EventLog"
+  lolbin_exec:        "\\b(certutil|bitsadmin|mshta|regsvr32|rundll32)\\b.*(http|-urlcache|javascript:|scrobj|/i:)|\\bwmic\\b.*process\\s+call\\s+create"
+
+  chained_exec:       "(&&|;|\\|\\|)\\s*(/tmp/|/dev/shm/|/var/tmp/|\\./)|chmod\\s+\\+x\\s+/tmp/.*(&&|;)|\\b(sh|bash|zsh)\\s+/tmp/|(>|>>)\\s*/tmp/\\S+\\s*(&&|;)\\s*(sh|bash)"
+  temp_exec_chain:    "(curl|wget)\\s+.*(>|-o|-O)\\s*/tmp/.*(&&|;|\\|\\|)\\s*(sh|bash|/tmp/)|(curl|wget)[^|]*\\|\\s*(ba|z)?sh"
+
 defaults:
   capabilities: ["read:*", "search:*", "summarize:*"]
   deny_targets:
@@ -48,6 +60,15 @@ defaults:
 
 # Per-agent overrides. Keys are glob patterns on agent_id.
 agents:
+
+  "os-activity":                                          # OS-level activity observed by the independent enforcer
+    capabilities: ["exec", "net:connect", "read:*"]       # allowed to *exist*; forbidden_patterns still apply to the command
+    deny_targets:
+      - "*id_rsa*"
+      - "*/shadow"
+      - "*/etc/sudoers*"
+    rate_limit: { max: 100000, window_s: 60 }
+    budget: 1000000.0
   "coder-*":
     capabilities: ["read:*", "write:file", "run:test", "run:lint", "shell:*"]
     allow_targets: ["/workspace/*", "/tmp/*"]

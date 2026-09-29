@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Callable
 from .events import Finding
 from .masking import redact
+from .audit_anchor import CheckpointLog, Signer
 from . import platform as plat
 
 try:
@@ -27,10 +28,19 @@ class AuditLog:
         self.path = Path(path); self.path.parent.mkdir(parents=True, exist_ok=True)
         self._prev = "0" * 64
         self._lock = threading.Lock()
+        self._count = 0
+        self._checkpoint = None
+        self._checkpoint_every = 0
         if self.path.exists():
             lines = self.path.read_text().strip().splitlines()
             if lines:
                 self._prev = json.loads(lines[-1]).get("hash", self._prev)
+
+    def enable_checkpoints(self, path: str, signer, every: int = 50, remote_sink=None):
+        """Sign the chain state every `every` records (tamper-PROOF anchor, not just evident)."""
+        self._checkpoint = CheckpointLog(path, signer, remote_sink=remote_sink)
+        self._checkpoint_every = every
+        return self
 
     def write(self, record: dict):
         import hashlib
@@ -41,6 +51,9 @@ class AuditLog:
             record["hash"] = h; self._prev = h
             with self.path.open("a") as f:
                 f.write(json.dumps(record, default=str) + "\n")
+            self._count += 1
+            if self._checkpoint and self._checkpoint_every and self._count % self._checkpoint_every == 0:
+                self._checkpoint.emit(self._count, self._prev)
 
     def verify(self) -> bool:
         import hashlib

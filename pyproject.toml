@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "goodai-sentinel"
-version = "0.3.1"
+version = "0.4.6"
 description = "Defensive AI module: host monitor + AI-agent guardrail"
 requires-python = ">=3.10"
 dependencies = ["psutil>=5.9", "pyyaml>=6", "cryptography>=42"]
@@ -17,7 +17,7 @@ test = ["pytest>=7"]
 sentinel = "sentinel.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["sentinel*", "integrations*", "mobile*", "redteam*", "pdp*"]
+include = ["sentinel*", "integrations*", "mobile*", "redteam*", "pdp*", "enforcement*", "bench*", "dashboard*"]
 
 [tool.setuptools.package-data]
 sentinel = ["default_policy.yaml"]
